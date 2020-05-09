@@ -3,28 +3,27 @@ HOST: https://iWine.apiblueprint.org/
 
 # iWine API 
 
-iWine API allows user to control "smart" decanter and to get it's status with any devices using this API. Errors from server are human readed and are used to be
+iWine API allows user to control "smart" iWine and to get it's status with any devices using this API. Errors from server are human readed and are used to be
 shown on UI side
 API provides few functions:
 Authentication: with mobile number (by code)
 Authorization: with mobile number (by code), including sign out.
-Change tempreture: changes tempreture in decanter
-Shaking decater: shakes decanter
+Change tempreture: changes tempreture in iWine
+Shaking decater: shakes iWine
 Status: check the status of iWine
 
+Getting access: after getting "access" from signup response in "access" field value, Header "Authorization" has to be filled in with OAuth access,
+e.g. Authorization: OAuth 450dSdsdk48578593003203:
 
 # Authentication [/api/signup]
 
 ## Sign Up [POST]
-
 Creates new user:
+1. phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. +79165910525
+2. mock - 1 for mock, 0 for server request. mock always responses with 202
+3. access - has to be sent in headers in all further requests
+4. message - information message in response for UI
 
-*phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. +79165910525.
-*mock - 1 for mock, 0 for server request. mock always responses with 202
-
-*access - has to be sent in headers in all further requests
-
-*message - information message for UI
 + Request  (application/json)
 
         {
@@ -43,10 +42,11 @@ Creates new user:
          {
         "message": "Incorrect phone format. Please, try again"
         }
+        
 + Response 422 (application/json)
 
          [{
-        "message": "Phone is already used. Sign in or use another ones"
+        "message": "Phone is already used. Please, sign In or use another one"
         }
 + Response 502 (application/json)
 
@@ -55,13 +55,10 @@ Creates new user:
         }
 ## Sign Up resend [PUT]
 Reseneds SMS code to the phone number by access token
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+1. Code - code from SMS
+2. mock - 1 for mock, 0 for server request. Mock always responses with 202
+3. message - information message in response for UI
 
-*Code - code from SMS
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202
-
-*message - information message for UI
 + Request  (application/json) 
 
     + Headers
@@ -87,7 +84,7 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
 + Response 400 (application/json)
 
          {
-        "message": "Code is requested to earlier. Timeout to resend 00:59 sec"
+        "message": "Code is requested too earlier. Timeout to resend 00:59 sec"
         }
 
 + Response 502 (application/json)
@@ -97,13 +94,9 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         }
 ## Sign Up confirm [PATCH]
 Confirms user, after confirm user is automatically signed in.
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
-
-*code - code from SMS, e.g. 654321
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202
-
-*message - information message for UI
+1. code - code from SMS, e.g. 654321
+2. mock - 1 for mock, 0 for server request. Mock always responses with 202
+3. message - information message in response for UI
 
 + Request  (application/json) 
 
@@ -146,17 +139,12 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
 
 # Authorization [/api/signin]
 ## Sign In [POST]
-
 Signin user:
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203
+1. phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. 79165910525
+2. access - has to be sent in headers in all further requests
+3. mock - 1 for mock, 0 for server request. Mock always responses with 202
+4. message - information message in response for UI
 
-*phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. 79165910525
-
-*access - has to be sent in headers in all further requests
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202
-
-*message - information message for UI
 + Request  (application/json)
 
         {
@@ -187,11 +175,9 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         }
 ## Sign In resend [PUT]
 Reseneds SMS code to the phone number by access token
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+1. Code - code from SMS
+2. message - information message in response for UI
 
-*Code - code from SMS
-
-*message - information message for UI
 + Request  (application/json) 
 
     + Headers
@@ -227,13 +213,9 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         }
 ## Sign In confirm [PATCH]
 Confirms user, after confirm user is automatically Signed in.
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
-
-*code - code from SMS
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202
-
-*message - information message for UI
+1. code - code from SMS
+2. mock - 1 for mock, 0 for server request. Mock always responses with 202
+3. message - information message in response for UI
 + Request  (application/json) 
 
     + Headers
@@ -269,15 +251,10 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         "message": "Internal error has occured. Please, try again"
         }
 ## Sign Out [DELETE]
-Sign outs user. It also calls "Switch" method with "Off" value in "Switch" field to avoid working decanter too much time without any provided actions to server.
-Authomatic sign out without any actions is done after 45 mins (with Switchin on for sure).
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+Sign outs user. 
+1. mock - 1 for mock, 0 for server request. Mock always responses with 202
+2. message - information message for UI
 
-*code - code from SMS
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202
-
-*message - information message for UI
 + Request  (application/json) 
 
     + Headers
@@ -287,7 +264,6 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
     + Body
     
             {
-            "code": 654321,
             "mock": 0
             }
             
@@ -297,45 +273,26 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         {
         "message": "Not authorized"
         }
-+ Response 400 (application/json)
 
-         {
-        "message": "Incorrect code. Please, try again or resend code"
-        }
-+ Response 422 (application/json)
-
-         {
-        "message": "Code has expired. Please, resend code"
-        }
 + Response 502 (application/json)
 
-         [{
+        {
         "message": "Internal error has occured. Please, try again"
         }
 
-# Status [/api/status]
+# iWines statuses [/api/iWine_statuses]
 ## Get status [GET]
-
-Get status of decanter
+Get status of iWine
 Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202 and mock data
-
-*volume - current volume of liquid in decanter in litres
-
-*alcohol - alcohol in liquid, in %
-
-*sugar - sugar in liquid, gr/100ml
-
-*tempreture - tempreture in degrees, C. Couldn't be less then 5 dergrees upper then "0" and upper more than "45"
-
-*Type - wine type: red, white, ping, orange
-
-*TypeTrueCofficient - cofficient of Type relevancy
-
-*Switched - On/Off. Shows id decanter is switched On or switched Off. In case of switching off, other fields are not sent by server, cause decanter
-is not analyzing its filling
-
+1. mock - 1 for mock, 0 for server request. Mock always responses with 202 and mock data
+2. Id - id of iWine
+3. volume - current volume of liquid in iWine in litres
+4. alcohol - alcohol in liquid, in %
+5. sugar - sugar in liquid, gr/100ml
+6. tempreture - tempreture in degrees, C. Couldn't be less then 5 dergrees upper then "0" and upper more than "45"
+7. Type - wine type: red, white, ping, orange
+8. TypeTrueCofficient - cofficient of Type relevancy
+9. Switched - On/Off. Shows id iWine is switched On or switched Off. In case of switching off, other fields are not sent by server, cause iWine is not analyzing its filling
 
 + Request  (application/json) 
 
@@ -346,9 +303,10 @@ is not analyzing its filling
     + Body
     
             {
+            "id": "1",
             "mock": 0
             }
-     
+            
 + Response 202 (application/json)
 
         {
@@ -377,11 +335,102 @@ is not analyzing its filling
          [{
         "message": "Internal error has occured. Please, try again"
         }
+# iWines management [/api/iWine_list]
+
+## Add iWine to the user [POST]
+Adds iWine to user. Few iWines can be added to user. Few user can be connected to same iWine
+1. mock - 1 for mock, 0 for server request. Mock always responses with 202
+2. iWineId - unique id of iWine, presented on iWine
+
+*iWineCode - unique code, generated by iWine, works for 2 mins, 6 digits
+
+*Name - name for iWine, has to be unique for these user
+
+*message - information message for UI
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "iWineId": "1ED202017-RM",
+            "iWineCode": 654321,
+            "Name": "Father's iWine"
+            "mock": 0,
+            }
+            
++ Response 202 (application/json)
+
+        {
+        "message": "iWine is added successfully"
+        }
++ Response 401 (application/json)
+
+         {
+        "message": "Not authorized"
+        }
+        
++ Response 422 (application/json)
+
+         {
+        "message": "these iWine Id or iWine Name is already used. Please, use another one"
+        }
+
++ Response 502 (application/json)
+
+         {
+        "message": "Internal error has occured. Please, try again"
+        }
+## Remove iWine from the user [DELETE]
+Delete iWine from the user.
+1. mock - 1 for mock, 0 for server request. Mock always responses with 202
+2. iWineId - unique id of iWine, presented on iWine
+3. message - information message for UI
+
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "iWineId": "1ED202017-RM",
+            "mock": 0,
+            }
+            
++ Response 202 (application/json)
+
+        {
+        "message": "iWine is deleted successfully"
+        }
++ Response 401 (application/json)
+
+         {
+        "message": "Not authorized"
+        }
+        
++ Response 422 (application/json)
+
+         {
+        "message": "Incorrecy"
+        }
+
++ Response 500 (application/json)
+
+         {
+        "message": "Incorrecy"
+        }
+
 
 # Switch [/api/switch]
 ## Switch [POST]
-Switches On or Switches off decanter
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+Switches On or Switches off iWine
+
 
 SwitchType: On/Off. Switches On or Switches Off. D
 
@@ -407,12 +456,7 @@ SwitchType: On/Off. Switches On or Switches Off. D
 + Response 400 (application/json)
 
         {
-        "message": "Already Switched On"
-        }
-+ Response 400 (application/json)
-
-        {
-        "message": "Already Switched Off"
+        "message": "U cannot change switch status to the same. Please, try again"
         }
 
 + Response 401 (application/json)
@@ -429,7 +473,7 @@ SwitchType: On/Off. Switches On or Switches Off. D
 # Change tempreture [/api/tempreture]
 ## Change tempreture [POST]
 
-Request to change the tempreture of liquid inside decanter. Cause the tempreture could not changed at the moment, async callback is realized basin on requestId
+Request to change the tempreture of liquid inside iWine. Cause the tempreture could not changed at the moment, async callback is realized basin on requestId
 Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203.
 changeOn or changeTo is mandatory (on of pair)
 
@@ -484,4 +528,4 @@ changeOn or changeTo is mandatory (on of pair)
         
 
 
-# Shake decanter [/api/shake]
+# Shake iWine [/api/shake]
