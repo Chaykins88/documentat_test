@@ -7,8 +7,7 @@ iWine API allows user to control "smart" decanter and to get it's status with an
 shown on UI side
 API provides few functions:
 Authentication: with mobile number (by code)
-Authorization: with mobile number (by code), including sign out. Authomatic sign out without any actions is done after 45 mins. It also calls Switch method
-with "Off" value in "Switch" field to avoid working decanter too much time without any provided actions to server
+Authorization: with mobile number (by code), including sign out.
 Change tempreture: changes tempreture in decanter
 Shaking decater: shakes decanter
 Status: check the status of iWine
@@ -270,7 +269,8 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         "message": "Internal error has occured. Please, try again"
         }
 ## Sign Out [DELETE]
-Confirms user, after confirm user is automatically Signed in.
+Sign outs user. It also calls "Switch" method with "Off" value in "Switch" field to avoid working decanter too much time without any provided actions to server.
+Authomatic sign out without any actions is done after 45 mins (with Switchin on for sure).
 Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
 
 *code - code from SMS
