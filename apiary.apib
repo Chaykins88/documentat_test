@@ -1,14 +1,14 @@
 FORMAT: 1A
-HOST: https://polls.apiblueprint.org/
+HOST: https://iWine.apiblueprint.org/
 
-# Chaykins88 
+# iWine API 
 
 Polls is a simple API allowing consumers to view polls and vote in them.
 
-## Questions Collection [/questions]
+## API Collection [/api]
 
-### List All Questions [GET]
-
+### Authentication [GET]
++ Request  (application/json)
 + Response 200 (application/json)
 
         [
@@ -33,7 +33,7 @@ Polls is a simple API allowing consumers to view polls and vote in them.
             }
         ]
 
-### Create a New Question [POST]
+### Change tempreture [POST]
 
 You may create your own question using this action. It takes a JSON
 object containing a question and a collection of answers in the
