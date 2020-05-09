@@ -8,24 +8,383 @@ API provides few functions:
 Authentication: with mobile number (by code)
 Authorization: with mobile number (by code)
 Change tempreture: changes tempreture in decanter
-Shaking decater: 
+Shaking decater: shakes decanter
+Status: check the status of iWine
 
-## API Collection [/api]
+# Authentication [/api/signup]
 
-### Authentication [/api/auth]
-### Signup [/api/signup]
+## Sign Up [POST]
 
-### Signup [POST]
+Creates new user:
+
+*phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. +79165910525.
+*mock - 1 for mock, 0 for server request. mock always responses with 202
+
+*access - has to be sent in headers in all further requests
+
+*message - information message for UI
 + Request  (application/json)
 
-{
+        {
+        "phone": "+79160000000",
+        "mock": 0
+        }
+        
++ Response 202 (application/json)
 
-}
-+ Response 200 (application/json)
+        {
+        "access": "450dSdsdk48578593003203"
+        "message": "Please fill in code from SMS we sent"
+        }
++ Response 400 (application/json)
 
-### Signup_confirm [PUT]
+         {
+        "message": "Incorrect phone format. Please, try again"
+        }
++ Response 422 (application/json)
 
-### Change tempreture [/api/tempreture]
+         [{
+        "message": "Phone is already used. Sign in or use another ones"
+        }
++ Response 502 (application/json)
+
+         [{
+        "message": "Internal error has occured. Please, try again"
+        }
+## Sign Up resend [PUT]
+Reseneds SMS code to the phone number by access token
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+
+*Code - code from SMS
+
+*mock - 1 for mock, 0 for server request. Mock always responses with 202
+
+*message - information message for UI
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "mock": 0
+            }
+            
++ Response 202 (application/json)
+
+        {
+        "message": "Phone code resent"
+        }
++ Response 401 (application/json)
+
+         {
+        "message": "Not authorized"
+        }
++ Response 400 (application/json)
+
+         {
+        "message": "Code is requested to earlier. Timeout to resend 00:59 sec"
+        }
+
++ Response 502 (application/json)
+
+         {
+        "message": "Internal error has occured. Please, try again"
+        }
+## Sign Up confirm [PATCH]
+Confirms user, after confirm user is automatically signed in.
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+
+*code - code from SMS, e.g. 654321
+
+*mock - 1 for mock, 0 for server request. Mock always responses with 202
+
+*message - information message for UI
+
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body 
+
+            {
+            "code": 654321,
+            "mock": 0
+            }
+            
++ Response 201 (application/json)
+
+        {
+        "message": "Phone confirmed. You can start using the application"
+        }
++ Response 401 (application/json)
+
+         {
+        "message": "Not authorized"
+        }
++ Response 400 (application/json)
+
+         {
+        "message": "Incorrect code. Please, try again or resend code"
+        }
++ Response 422 (application/json)
+
+         {
+        "message": "Code has expired. Please, resend code"
+        }
++ Response 502 (application/json)
+
+         [{
+        "message": "Internal error has occured. Please, try again"
+        }
+
+# Authorization [/api/signin]
+## Sign In [POST]
+
+Signin user:
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203
+
+*phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. 79165910525
+
+*access - has to be sent in headers in all further requests
+
+*mock - 1 for mock, 0 for server request. Mock always responses with 202
+
+*message - information message for UI
++ Request  (application/json)
+
+        {
+        "phone": 79160000000,
+        "mock": 0
+        }
+        
++ Response 202 (application/json)
+
+        {
+        "access": "450dSdsdk48578593003203"
+        "message": "Please fill in code from SMS we sent"
+        }
++ Response 400 (application/json)
+
+         {
+        "message": "Incorrect phone format. Please, try again"
+        }
++ Response 401 (application/json)
+
+         [{
+        "message": "Incorrect phone. Please try other ones or sign up"
+        }
++ Response 502 (application/json)
+
+         [{
+        "message": "Internal error has occured. Please, try again"
+        }
+## Sign In resend [PUT]
+Reseneds SMS code to the phone number by access token
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+
+*Code - code from SMS
+
+*message - information message for UI
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {      
+             "mock": 0
+            }
+            
++ Response 202 (application/json)
+
+        {
+        "message": "Phone code resent"
+        }
++ Response 401 (application/json)
+
+         {
+        "message": "Not authorized"
+        }
++ Response 400 (application/json)
+
+         {
+        "message": "Code is requested too earlier. Timeout to resend 00:59 sec"
+        }
+
++ Response 502 (application/json)
+
+         {
+        "message": "Internal error has occured. Please, try again"
+        }
+## Sign In confirm [PATCH]
+Confirms user, after confirm user is automatically Signed in.
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203:
+
+*code - code from SMS
+
+*mock - 1 for mock, 0 for server request. Mock always responses with 202
+
+*message - information message for UI
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "code": 654321,
+            "mock": 0
+            }
+            
++ Response 201 (application/json)
++ Response 401 (application/json)
+
+        {
+        "message": "Not authorized"
+        }
++ Response 400 (application/json)
+
+         {
+        "message": "Incorrect code. Please, try again or resend code"
+        }
++ Response 422 (application/json)
+
+         {
+        "message": "Code has expired. Please, resend code"
+        }
++ Response 502 (application/json)
+
+         [{
+        "message": "Internal error has occured. Please, try again"
+        }
+
+# Status [/api/status]
+## Get status [GET]
+
+Get status of decanter
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203
+
+*mock - 1 for mock, 0 for server request. Mock always responses with 202 and mock data
+
+*volume - current volume of liquid in decanter in litres
+
+*alcohol - alcohol in liquid, in %
+
+*sugar - sugar in liquid, gr/100ml
+
+*tempreture - tempreture in degrees, C. Couldn't be less then 5 dergrees upper then "0" and upper more than "45"
+
+*Type - wine type: red, white, ping, orange
+
+*TypeTrueCofficient - cofficient of Type relevancy
 
 
-### Shake decanter [/api/shake]
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "mock": 0
+            }
+     
++ Response 202 (application/json)
+
+        {
+        "volume": 0.7,
+        "alcohol": 12.3,
+        "sugar": 5,
+        "tempreture": 18,
+        "type": "white",
+        "TypeTrueCofficient": 78
+        }
+        
++ Response 400 (application/json)
+
+        {
+        "message": "Bad request"
+        }
+
++ Response 401 (application/json)
+
+        {
+        "message": "Not authorized"
+        }
++ Response 502 (application/json)
+
+         [{
+        "message": "Internal error has occured. Please, try again"
+        }
+        
+# Change tempreture [/api/tempreture]
+## Change tempreture [POST]
+
+Request to change the tempreture of liquid inside decanter. Cause the tempreture could not changed at the moment, async callback is realized basin on requestId
+Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203.
+changeOn or changeTo is mandatory (on of pair)
+
+*mock - 1 for mock, 0 for server request. Mock always responses with 202 and mock data
+
+*changeType - cool/heat, mandatory if changeOn is filled in, skipped if chang
+
+*changeOn - how much dergees up or down, step is 1 degree
+
+*changeTo - 
+
+
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "c
+            "mock": 0
+            }
+     
++ Response 202 (application/json)
+
+        {
+        "volume": 0.7,
+        "alcohol": 12.3,
+        "sugar": 5,
+        "tempreture": 18,
+        "type": "white",
+        "TypeTrueCofficient": 78
+        }
+        
++ Response 400 (application/json)
+
+        {
+        "message": "Bad request"
+        }
+
++ Response 401 (application/json)
+
+        {
+        "message": "Not authorized"
+        }
++ Response 502 (application/json)
+
+         [{
+        "message": "Internal error has occured. Please, try again"
+        }
+        
+
+
+# Shake decanter [/api/shake]
