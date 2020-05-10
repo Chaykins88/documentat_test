@@ -3,256 +3,168 @@ HOST: https://iWine.apiblueprint.org/
 
 # iWine API 
 
-iWine API allows user to control "smart" iWine and to get it's status with any devices using this API. Errors from server are human readed and are used to be
-shown on UI side
-API provides few functions:
-Authentication: with mobile number (by code)
-Authorization: with mobile number (by code), including sign out.
-Change tempreture: changes tempreture in iWine
-Shaking decater: shakes iWine
-Status: check the status of iWine
+iWine API allows user to control "smart" iWine and to get it's status. Errors from iWine are human readed and are used to be
+shown on UI side. API provides few functions:
+1. Authentication: Sign Ups User with Username, Password and iWine pairing code
+2. Authorization: Sign Ins or Sign Outs Users
+3. Status: check the status of current iWine  (liquid, alc, volume, etc.)
+4. Switch: Switch on/off iWine
+5. Tempreture: Changes tempreture op liquid inside iWine (heating/cooling)
+6. Shaking : Shakes iWine to enrich liquid incide with oxygen
 
-Getting access: after getting "access" from signup response in "access" field value, Header "Authorization" has to be filled in with OAuth access,
-e.g. Authorization: OAuth 450dSdsdk48578593003203:
+Getting access: after getting "access" from Sign In response in "access" field value, Header "Authorization" has to be filled in with OAuth access,
+e.g. Authorization: OAuth 450dSdsdk48578593003203
+
+Testing on mocks: mock - 1 for mock, 0 for server request. Mock "1" responses with 202, to get error responses, send one of the codes in mock field and one of the messages in "message" field (optional), e.g., "mock": "400", "message": "Incorrect Username or Password. Please, try again"
 
 # Authentication [/api/signup]
 
 ## Sign Up [POST]
-Creates new user:
-1. phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. +79165910525
-2. mock - 1 for mock, 0 for server request. mock always responses with 202
+Checks user uniqueness and meeting requirements, doesn't create user:
+1. Username - case sensetive username, unique for this iWine device, at least 5 symbols in latin, digits, "-", "_" and space are possible, 50 symbols max. Used for authorization
+2. mock - 0/1: mock or server request
 3. access - has to be sent in headers in all further requests
 4. message - information message in response for UI
 
 + Request  (application/json)
 
         {
-        "phone": "+79160000000",
+        "Username": "Alex Avin_2-one",
         "mock": 0
         }
         
 + Response 202 (application/json)
 
         {
-        "access": "450dSdsdk48578593003203"
-        "message": "Please fill in code from SMS we sent"
+        "message": "Username available"
         }
 + Response 400 (application/json)
 
-         {
-        "message": "Incorrect phone format. Please, try again"
+        {
+        "message": "Username doesn't meet minimum requirements"
         }
         
 + Response 422 (application/json)
 
-         [{
-        "message": "Phone is already used. Please, sign In or use another one"
+        {
+        "message": "User is already used for this iWine device. Please, Sign In or use another one"
         }
-+ Response 502 (application/json)
 
-         [{
-        "message": "Internal error has occured. Please, try again"
-        }
-## Sign Up resend [PUT]
-Reseneds SMS code to the phone number by access token
-1. Code - code from SMS
-2. mock - 1 for mock, 0 for server request. Mock always responses with 202
-3. message - information message in response for UI
-
-+ Request  (application/json) 
-
-    + Headers
-    
-            Authorization: OAuth 450dSdsdk48578593003203
-            
-    + Body
-    
-            {
-            "mock": 0
-            }
-            
-+ Response 202 (application/json)
++ Response 408 (application/json)
 
         {
-        "message": "Phone code resent"
-        }
-+ Response 401 (application/json)
-
-         {
-        "message": "Not authorized"
-        }
-+ Response 400 (application/json)
-
-         {
-        "message": "Code is requested too earlier. Timeout to resend 00:59 sec"
-        }
+        "message": "Request Timeout. Please try again"
+        }        
 
 + Response 502 (application/json)
 
-         {
+        {
         "message": "Internal error has occured. Please, try again"
         }
-## Sign Up confirm [PATCH]
-Confirms user, after confirm user is automatically signed in.
-1. code - code from SMS, e.g. 654321
-2. mock - 1 for mock, 0 for server request. Mock always responses with 202
-3. message - information message in response for UI
+        
+## Sign Up confirm [PATCH/api/signup/confirm]
+Creates user, and automatically Signs In to this iWine.
+1. Password - case sensetive user password for this iWine device: from 6 to 12 symbols, including latin letters, minimum 1 big letter and 1 digit
+2. Password_confirm - Password field value confirmation, same requirements
+3. mock - 0/1: mock or server request
+4. iWineCode - temporary code (lifetime 1 min), generated by iWine device (using button on it) and showed on iWine display for pairing User and iWine device
+5. message - information message in response for UI
 
 + Request  (application/json) 
 
-    + Headers
-    
-            Authorization: OAuth 450dSdsdk48578593003203
-            
-    + Body 
-
-            {
-            "code": 654321,
-            "mock": 0
-            }
+        {
+        "Username": "Alex Avin_2-one",
+        "Password": "TruelyHard1",
+        "Password_confirm": "TruelyHard1",
+        "iWineCode": 654321,
+        "mock": 0
+        }
             
 + Response 201 (application/json)
 
         {
-        "message": "Phone confirmed. You can start using the application"
+        "message": "User confirmed. You can start using the iWine"
         }
 + Response 401 (application/json)
 
-         {
-        "message": "Not authorized"
+        {
+        "message": "Username doesn't meet minimum requirements"
         }
 + Response 400 (application/json)
 
-         {
-        "message": "Incorrect code. Please, try again or resend code"
+        {
+        "message": "Password doesn't meet minimum requirements"
         }
 + Response 422 (application/json)
 
-         {
-        "message": "Code has expired. Please, resend code"
+        {
+        "message": "Password and Password confirm are not same"
         }
+        
++ Response 422 (application/json)
+
+        {
+        "message": "iWineCode is incorrect. Check code or create new one"
+        }
+
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }        
+        
 + Response 502 (application/json)
 
-         [{
+        {
         "message": "Internal error has occured. Please, try again"
         }
 
+
 # Authorization [/api/signin]
 ## Sign In [POST]
-Signin user:
-1. phone - mobile phone number in format of +Country_codeMobile operator codePhone, e.g. 79165910525
-2. access - has to be sent in headers in all further requests
-3. mock - 1 for mock, 0 for server request. Mock always responses with 202
+Sign In user to this iWine:
+1. Username - Username, created in Sign Up proccess, case sensetive
+2. Password - Password, created in Sign Up proccess, case sensetive
+3. mock - 0/1: mock or server request
 4. message - information message in response for UI
 
 + Request  (application/json)
 
         {
-        "phone": 79160000000,
+        "Username": "Alex Avin_2-one",
+        "Password": "TruelyHard1",
         "mock": 0
         }
         
 + Response 202 (application/json)
 
         {
-        "access": "450dSdsdk48578593003203"
-        "message": "Please fill in code from SMS we sent"
-        }
-+ Response 400 (application/json)
-
-         {
-        "message": "Incorrect phone format. Please, try again"
-        }
-+ Response 401 (application/json)
-
-         [{
-        "message": "Incorrect phone. Please try other ones or sign up"
-        }
-+ Response 502 (application/json)
-
-         [{
-        "message": "Internal error has occured. Please, try again"
-        }
-## Sign In resend [PUT]
-Reseneds SMS code to the phone number by access token
-1. Code - code from SMS
-2. message - information message in response for UI
-
-+ Request  (application/json) 
-
-    + Headers
-    
-            Authorization: OAuth 450dSdsdk48578593003203
-            
-    + Body
-    
-            {      
-             "mock": 0
-            }
-            
-+ Response 202 (application/json)
-
-        {
-        "message": "Phone code resent"
-        }
-+ Response 401 (application/json)
-
-         {
-        "message": "Not authorized"
-        }
-+ Response 400 (application/json)
-
-         {
-        "message": "Code is requested too earlier. Timeout to resend 00:59 sec"
+        "access": "450dSdsdk48578593003203",
+        "message": "Credentials accepted, user authorized"
         }
 
-+ Response 502 (application/json)
-
-         {
-        "message": "Internal error has occured. Please, try again"
-        }
-## Sign In confirm [PATCH]
-Confirms user, after confirm user is automatically Signed in.
-1. code - code from SMS
-2. mock - 1 for mock, 0 for server request. Mock always responses with 202
-3. message - information message in response for UI
-+ Request  (application/json) 
-
-    + Headers
-    
-            Authorization: OAuth 450dSdsdk48578593003203
-            
-    + Body
-    
-            {
-            "code": 654321,
-            "mock": 0
-            }
-            
-+ Response 201 (application/json)
 + Response 401 (application/json)
 
         {
-        "message": "Not authorized"
+        "message": "Incorrect Username or Password. Try another ones"
         }
-+ Response 400 (application/json)
 
-         {
-        "message": "Incorrect code. Please, try again or resend code"
-        }
-+ Response 422 (application/json)
++ Response 408 (application/json)
 
-         {
-        "message": "Code has expired. Please, resend code"
-        }
+        {
+        "message": "Request Timeout. Please try again"
+        }        
+
 + Response 502 (application/json)
 
-         [{
+        {
         "message": "Internal error has occured. Please, try again"
         }
-## Sign Out [DELETE]
-Sign outs user. 
-1. mock - 1 for mock, 0 for server request. Mock always responses with 202
+
+
+## Sign Out [DELETE/api/signout]
+Sign outs current user.
+1. mock - 0/1: mock or server request
 2. message - information message for UI
 
 + Request  (application/json) 
@@ -268,11 +180,22 @@ Sign outs user.
             }
             
 + Response 201 (application/json)
+
+        {
+        "message": "Signed out"
+        }
+
 + Response 401 (application/json)
 
         {
         "message": "Not authorized"
         }
+
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }        
 
 + Response 502 (application/json)
 
@@ -280,19 +203,18 @@ Sign outs user.
         "message": "Internal error has occured. Please, try again"
         }
 
-# iWines statuses [/api/iWine_statuses]
+# Status [/api/status]
 ## Get status [GET]
-Get status of iWine
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203
-1. mock - 1 for mock, 0 for server request. Mock always responses with 202 and mock data
-2. Id - id of iWine
-3. volume - current volume of liquid in iWine in litres
-4. alcohol - alcohol in liquid, in %
-5. sugar - sugar in liquid, gr/100ml
-6. tempreture - tempreture in degrees, C. Couldn't be less then 5 dergrees upper then "0" and upper more than "45"
-7. Type - wine type: red, white, ping, orange
-8. TypeTrueCofficient - cofficient of Type relevancy
-9. Switched - On/Off. Shows id iWine is switched On or switched Off. In case of switching off, other fields are not sent by server, cause iWine is not analyzing its filling
+Get status of iWine, to which user connected at the moment
+
+1. mock - 0/1: mock or server request
+2. volume - current volume of liquid in iWine in litres
+3. alcohol - alcohol in liquid, in %
+4. sugar - sugar in liquid, gr/100ml
+5. tempreture - tempreture in degrees, C°. Couldn't be less then "5" dergrees upper then "0" and upper than "45"
+6. Type - wine type: red, white, pink, orange or unknown (impossible to identify)
+7. TypeRelevancyCofficient - cofficient of Type relevancy
+8. Switched - On/Off. Shows if iWine is switched On or switched Off. In case of switching off, other fields are not sent by iWine, cause iWine is not analyzing its filling
 
 + Request  (application/json) 
 
@@ -303,7 +225,6 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
     + Body
     
             {
-            "id": "1",
             "mock": 0
             }
             
@@ -330,109 +251,24 @@ Header "Authorization" has to be filled in with OAuth access (value of "access" 
         {
         "message": "Not authorized"
         }
-+ Response 502 (application/json)
 
-         [{
-        "message": "Internal error has occured. Please, try again"
-        }
-# iWines management [/api/iWine_list]
-
-## Add iWine to the user [POST]
-Adds iWine to user. Few iWines can be added to user. Few user can be connected to same iWine
-1. mock - 1 for mock, 0 for server request. Mock always responses with 202
-2. iWineId - unique id of iWine, presented on iWine
-
-*iWineCode - unique code, generated by iWine, works for 2 mins, 6 digits
-
-*Name - name for iWine, has to be unique for these user
-
-*message - information message for UI
-+ Request  (application/json) 
-
-    + Headers
-    
-            Authorization: OAuth 450dSdsdk48578593003203
-            
-    + Body
-    
-            {
-            "iWineId": "1ED202017-RM",
-            "iWineCode": 654321,
-            "Name": "Father's iWine"
-            "mock": 0,
-            }
-            
-+ Response 202 (application/json)
++ Response 408 (application/json)
 
         {
-        "message": "iWine is added successfully"
-        }
-+ Response 401 (application/json)
-
-         {
-        "message": "Not authorized"
-        }
-        
-+ Response 422 (application/json)
-
-         {
-        "message": "these iWine Id or iWine Name is already used. Please, use another one"
-        }
+        "message": "Request Timeout. Please try again"
+        }        
 
 + Response 502 (application/json)
 
-         {
+        {
         "message": "Internal error has occured. Please, try again"
         }
-## Remove iWine from the user [DELETE]
-Delete iWine from the user.
-1. mock - 1 for mock, 0 for server request. Mock always responses with 202
-2. iWineId - unique id of iWine, presented on iWine
-3. message - information message for UI
 
-+ Request  (application/json) 
-
-    + Headers
-    
-            Authorization: OAuth 450dSdsdk48578593003203
-            
-    + Body
-    
-            {
-            "iWineId": "1ED202017-RM",
-            "mock": 0,
-            }
-            
-+ Response 202 (application/json)
-
-        {
-        "message": "iWine is deleted successfully"
-        }
-+ Response 401 (application/json)
-
-         {
-        "message": "Not authorized"
-        }
-        
-+ Response 422 (application/json)
-
-         {
-        "message": "Incorrecy"
-        }
-
-+ Response 500 (application/json)
-
-         {
-        "message": "Incorrecy"
-        }
-
-
-# Switch [/api/switch]
+# Switch [/api/switch?SwitchType={SwitchType}]
 ## Switch [POST]
 Switches On or Switches off iWine
-
-
-SwitchType: On/Off. Switches On or Switches Off. D
+1. mock - 0/1: mock or server request
+2. {SwitchType}=On/Off. Switches On or Switches Off.
 
 + Request  (application/json) 
 
@@ -443,7 +279,6 @@ SwitchType: On/Off. Switches On or Switches Off. D
     + Body
     
             {
-            "Switch": "On"
             "mock": 0
             }
      
@@ -456,7 +291,7 @@ SwitchType: On/Off. Switches On or Switches Off. D
 + Response 400 (application/json)
 
         {
-        "message": "U cannot change switch status to the same. Please, try again"
+        "message": "You cannot change switch status to the same. Please, try again"
         }
 
 + Response 401 (application/json)
@@ -464,29 +299,28 @@ SwitchType: On/Off. Switches On or Switches Off. D
         {
         "message": "Not authorized"
         }
+
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }        
+
 + Response 502 (application/json)
 
          [{
         "message": "Internal error has occured. Please, try again"
         }
 
-# Change tempreture [/api/tempreture]
+# Temreture [/api/tempreture]
 ## Change tempreture [POST]
-
-Request to change the tempreture of liquid inside iWine. Cause the tempreture could not changed at the moment, async callback is realized basin on requestId
-Header "Authorization" has to be filled in with OAuth access (value of "access" field from signup response), e.g. Authorization: OAuth 450dSdsdk48578593003203.
+Request to change the tempreture of liquid inside iWine. Cause the tempreture could not changed at the moment, async callback is realized basing on requestId
 changeOn or changeTo is mandatory (on of pair)
-
-*mock - 1 for mock, 0 for server request. Mock always responses with 202 and mock data
-
-*changeType - cool/heat, mandatory if changeOn is filled in, skipped on server side if changeTo is filled in
-
-*changeOn - how much dergees up or down, step is 1 degree
-
-*changeTo - to what tempreture is to set. Between 5 and 45
-
-*requestId - requestId, generated by server for async callback when the result if archieved or error occured
-
+1. mock - 0/1: mock or server request
+2. changeType - cool/heat, mandatory if changeOn is filled in, skipped on server side if changeTo is filled in
+3. changeOn - how much dergees up or down, step is 1 degree
+4. changeTo - to what tempreture is to set. Between 5 and 45
+5. requestId - requestId, generated by iWine for async callback when the result if archieved or error occured
 
 + Request  (application/json) 
 
@@ -497,9 +331,9 @@ changeOn or changeTo is mandatory (on of pair)
     + Body
     
             {
-            "changeType": "cool"
-            "changeOn": 35
-            "changeTo": 45
+            "changeType": "cool",
+            "changeOn": 35,
+            "changeTo": 45,
             "mock": 0
             }
      
@@ -507,6 +341,7 @@ changeOn or changeTo is mandatory (on of pair)
 
         {
         "requestId": 1
+        "message": "Your request to change tempreture is approved. Pls, wait for a few minutes"
         }
         
 + Response 400 (application/json)
@@ -515,17 +350,137 @@ changeOn or changeTo is mandatory (on of pair)
         "message": "Max temreture is reached. Heating is impossible"
         }
 
++ Response 400 (application/json)
+
+        {
+        "message": "Min temreture is reached. Cooling is impossible"
+        }    
+
++ Response 400 (application/json)
+
+        {
+        "message": "iWine is empty. Please, add at least 50 ml (0,05 littres) of liquid"
+        }        
+        
 + Response 401 (application/json)
 
         {
         "message": "Not authorized"
         }
+
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }        
+
 + Response 502 (application/json)
 
-         [{
+        {
         "message": "Internal error has occured. Please, try again"
         }
+
+## Change tempreture callback [PATCH/api/tempreture/callback]
+Callback from iWine about changing tempreture request status. Response from UI is ignored by iWine.
+In case of problems or long waiting user can check the status of iWine using Statuses method.
+1. message - information message for UI
+2. requestId - requestId from tempreture method
+3. result - 0/1, 0 - error, 1 - success
+
++ Request  (application/json) 
+
+            {
+            "result": 1,
+            "requestId": 1,
+            "message": "Changing the tempreture was succeeded"
+            }
+
++ Request  (application/json) 
+
+            {
+            "result": 0,
+            "message": "Changing the tempreture is failed. Please, try again"
+            }
+
++ Response 201 (application/json)            
+
+# Shaking [/api/shake]
+## Shake iWine [POST]
+Request to shake iWine to enreach the liquid inside iWine with oxygen. Cause this proccess is not instant, async callback is realized basing on requestId
+changeOn or changeTo is mandatory (on of pair)
+1. mock - 0/1: mock or server request and mock data
+2. requestId - requestId, generated by server for async callback when the result if archieved or error occured
+3. message - information message for UI
+
++ Request  (application/json) 
+
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
+            {
+            "mock": 0
+            }
+     
++ Response 202 (application/json)
+
+        {
+        "requestId": 1
+        "message": "Your request to shake iWine is approved. Pls, wait for a few minutes"
+        }
         
++ Response 400 (application/json)
 
+        {
+        "message": "Shaking is done few minutes ago. Timeout to re-shake is 59 sec"
+        }
 
-# Shake iWine [/api/shake]
++ Response 400 (application/json)
+
+        {
+        "message": "iWine is empty. Please, add at least 50 ml (0,05 littres) of liquid"
+        }        
+        
++ Response 401 (application/json)
+
+        {
+        "message": "Not authorized"
+        }
+
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }        
+
++ Response 502 (application/json)
+
+        {
+        "message": "Internal error has occured. Please, try again"
+        }
+
+## Shake iWine callback [/api/shake/callback]
+Callback from server about shaking iWine request status. Response from UI is not proccessed by server.
+In case of problems or long waiting user can check the status of iWine using
+iWines statuses method
+1. message - information message for UI
+2. requestId - requestId, generated by server for async callback when the result if archieved or error occured
+3. result - 0/1, 0 - error, 1 - success
+
++ Request  (application/json) 
+
+            {
+            "result": 1,
+            "message": "Changing the tempreture was ucceeded"
+            }
+            
++ Request  (application/json) 
+
+            {
+            "result": 0,
+            "message": "Shaking the iWine is failed. Please, try again"
+            }
+
++ Response 201 (application/json)
