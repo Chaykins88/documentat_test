@@ -9,13 +9,16 @@ shown on UI side. API provides few functions:
 2. Authorization: Sign Ins or Sign Outs Users
 3. Status: check the status of current iWine  (liquid, alc, volume, etc.)
 4. Switch: Switch on/off iWine
-5. Tempreture: Changes tempreture op liquid inside iWine (heating/cooling)
+5. Tempreture: Changes tempreture of liquid inside iWine (heating/cooling)
 6. Shaking : Shakes iWine to enrich liquid incide with oxygen
+
+iWine mock server address is iWine.ru/api.
+iWine device address is showed on iWine display
 
 Getting access: after getting "access" from Sign In response in "access" field value, Header "Authorization" has to be filled in with OAuth access,
 e.g. Authorization: OAuth 450dSdsdk48578593003203
 
-Testing on mocks: mock - 1 for mock, 0 for server request. Mock "1" responses with 202, to get error responses, send one of the codes in mock field and one of the messages in "message" field (optional), e.g., "mock": "400", "message": "Incorrect Username or Password. Please, try again"
+Testing on mocks: mock - 1 for mock data, 0 for device request. Mock "1" responses with 202/200, to get error responses, send one of the codes in mock field and one of the messages in "message" field (optional), e.g., "mock": "400", "message": "Incorrect Username or Password. Please, try again"
 
 # Authentication [/api/signup]
 
@@ -33,7 +36,7 @@ Checks user uniqueness and meeting requirements, doesn't create user:
         "mock": 0
         }
         
-+ Response 202 (application/json)
++ Response 200 (application/json)
 
         {
         "message": "Username available"
@@ -80,7 +83,7 @@ Creates user, and automatically Signs In to this iWine.
         "mock": 0
         }
             
-+ Response 201 (application/json)
++ Response 200 (application/json)
 
         {
         "message": "User confirmed. You can start using the iWine"
@@ -136,7 +139,7 @@ Sign In user to this iWine:
         "mock": 0
         }
         
-+ Response 202 (application/json)
++ Response 200 (application/json)
 
         {
         "access": "450dSdsdk48578593003203",
@@ -228,7 +231,7 @@ Get status of iWine, to which user connected at the moment
             "mock": 0
             }
             
-+ Response 202 (application/json)
++ Response 200 (application/json)
 
         {
         "volume": 0.7,
@@ -266,7 +269,8 @@ Get status of iWine, to which user connected at the moment
 
 # Switch [/api/switch?SwitchType={SwitchType}]
 ## Switch [POST]
-Switches On or Switches Off iWine
+Switches On or Switches Off iWine (Stand by without choosing liquid, volume, temreture).
+Switching Off cancels changing tempreture and shaking
 1. mock - 0/1: mock or server request
 2. {SwitchType}=On/Off. Switches On or Switches Off.
 
@@ -282,7 +286,7 @@ Switches On or Switches Off iWine
             "mock": 0
             }
      
-+ Response 202 (application/json)
++ Response 200 (application/json)
 
         {
         "message": "Switched On"
@@ -341,7 +345,7 @@ changeOn or changeTo is mandatory (on of pair)
 
         {
         "requestId": 1,
-        "message": "Your request to change tempreture is approved. Pls, wait for a few minutes"
+        "message": "Changing the temreture in proccess"
         }
         
 + Response 400 (application/json)
@@ -380,34 +384,59 @@ changeOn or changeTo is mandatory (on of pair)
         "message": "Internal error has occured. Please, try again"
         }
 
-## Change tempreture callback [PATCH/api/tempreture/callback]
-Callback from iWine to changing tempreture request. Response from UI is ignored by iWine.
-In case of problems or long waiting user can check the status of iWine using Statuses method.
+## Change tempreture status [GET]
+Request to iWine for gettintg results of shaking iWine request.
+Method shoul be recalled in few minutes after getting requestId not more often then every 2 sec.
 1. message - information message for UI
 2. requestId - requestId from tempreture method
 3. result - 0/1, 0 - error, 1 - success
 
 + Request  (application/json) 
 
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
+            
+    + Body
+    
             {
-            "result": 1,
-            "requestId": 1,
-            "message": "Changing the tempreture was succeeded"
+            "requestId": 1
             }
 
-+ Request  (application/json) 
++ Response 200 (application/json)
 
-            {
-            "result": 0,
-            "requestId": 1,
-            "message": "Changing the tempreture is failed. Please, try again"
-            }
+        {
+        "message": "Changing the tempreture successfull"
+        }
 
-+ Response 201 (application/json)            
++ Response 202 (application/json)
+
+        {
+        "message": "Changing the tempreture in proccess"
+        }
+
++ Response 400 (application/json)
+
+        {
+        "message": "Changing the tempreture was failed. Please, try again"
+        }        
+        
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }                
+
++ Response 502 (application/json)
+
+        {
+        "message": "Internal error has occured. Please, try again"
+        }
+
 
 # Shaking [/api/shake]
 ## Shake iWine [POST]
-Request to shake iWine to enreach the liquid inside iWine with oxygen. Cause this proccess is not instant, async callback is realized basing on requestId.
+Request to change tempreture of iWine to enreach the liquid inside iWine with oxygen. Cause this proccess is not instant, async callback is realized basing on requestId.
 changeOn or changeTo is mandatory (on of pair)
 1. mock - 0/1: mock or server request and mock data
 2. requestId - requestId, generated by server for async callback when the result if archieved or error occured
@@ -429,7 +458,7 @@ changeOn or changeTo is mandatory (on of pair)
 
         {
         "requestId": 1
-        "message": "Your request to shake iWine is approved. Pls, wait for a few minutes"
+        "message": "Shacking in proccess"
         }
         
 + Response 400 (application/json)
@@ -462,10 +491,9 @@ changeOn or changeTo is mandatory (on of pair)
         "message": "Internal error has occured. Please, try again"
         }
 
-## Shake iWine callback [PATCH /api/shake/callback]
-Callback from iWine to shaking iWine request. Response from UI is not proccessed by iWine.
-In case of problems or long waiting user can check the status of iWine using
-Status method
+## Shake iWine status [GET]
+Request to iWine for gettintg results of shaking iWine request.
+Method shoul be recalled in few minutes after getting requestId not more often then every 2 sec.
 1. message - information message for UI
 2. requestId - requestId, generated by server for async callback when the result if archieved or error occured
 3. result - 0/1, 0 - error, 1 - success
@@ -473,16 +501,42 @@ Status method
 
 + Request  (application/json) 
 
-            {
-            "result": 1,
-            "message": "Changing the tempreture was succeed"
-            }
+    + Headers
+    
+            Authorization: OAuth 450dSdsdk48578593003203
             
-+ Request  (application/json) 
-
+    + Body
+    
             {
-            "result": 0,
-            "message": "Shaking the iWine is failed. Please, try again"
+            "requestId": 1
             }
+     
++ Response 202 (application/json)
 
-+ Response 201 (application/json)
+        {
+        "message": "Shacking in proccess"
+        }
+
++ Response 200 (application/json)
+
+        {
+        "message": "Shacking was successfull"
+        }
+
++ Response 400 (application/json)
+
+        {
+        "message": "Shaking was failed. Please, try again"
+        }        
+ 
++ Response 408 (application/json)
+
+        {
+        "message": "Request Timeout. Please try again"
+        }        
+
++ Response 502 (application/json)
+
+        {
+        "message": "Internal error has occured. Please, try again"
+        }
